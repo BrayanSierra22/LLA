@@ -1,0 +1,15 @@
+select
+    account_id,
+    dias_mora,
+    case when dias_mora >= 90 then 'Inactivos' when dias_mora <90 then 'Activos' else 'Activos' end as clasificacion
+    
+from tabla_dias_mora   
+)
+
+select 
+    count(distinct tabla_categorizados.account_id) as num_users_desactivation
+from tabla_categorizados     
+left join "db-stage-dev"."so_hdr_cwc" as service on cast(tabla_categorizados.account_id as bigint) = service.account_id
+where clasificacion = 'Activos'
+    and service.order_type = 'DEACTIVATION'
+    and date_trunc('month', date(service.order_start_date)) = date('2022-10-01')
