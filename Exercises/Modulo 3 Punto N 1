@@ -1,0 +1,39 @@
+WITH usuarios_activos AS( -- Tabla de usuarios activos
+SELECT distinct
+    dt,-- Fecha de la base
+    act_acct_cd -- ID de cliente
+FROM "db-analytics-prod"."fixed_cwp"
+WHERE fi_outst_age < 90 -- Clientes de servicio residencial que su mora es menor a 90 dias
+    AND act_cust_typ_nm = 'Residencial' -- Filtro para servicio residencial
+    AND year(date(dt)) = 2022 -- Filtro para año 2022
+),
+
+llamadas_reclamaciones AS(
+SELECT distinct
+    date(interaction_start_time) as fecha,
+    account_id,--ID de la cuenta
+        interaction_id -- Tipo de interaccion
+FROM "db-stage-prod"."interactions_cwp"
+WHERE interaction_purpose_descrip = 'CLAIM'
+),
+numeros_llamadas as (
+SELECT distinct
+    MONTH(DATE(dt)) AS mes,
+    users.act_acct_cd AS usuario,
+    COUNT(DISTINCT interaction_id) AS numero_llamada
+FROM usuarios_activos AS users INNER JOIN llamadas_reclamaciones AS claims ON claims.account_id = users.act_acct_cd AND month(date(dt)) = month(date(fecha))
+GROUP BY 1,2
+),
+clasificacion as (
+SELECT distinct
+    *,
+   CASE WHEN numero_llamada = 1 THEN  'Una llamada' ELSE 'Mas de una llamada' END AS category
+FROM numeros_llamadas
+)
+
+SELECT distinct
+    mes,
+    category,
+    COUNT(DISTINCT usuario) as Total_usuarios
+FROM clasificacion
+GROUP BY 1,2 ORDER BY 1
