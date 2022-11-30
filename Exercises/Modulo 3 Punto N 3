@@ -1,6 +1,5 @@
-With 
---  Clientes con menos de 90 dias de mora considerados activos, residenciales en panama en 2022
-Usuarios_activos as (
+With --Clientes con menos de 90 dias de mora considerados activos, residenciales en panama en 2022
+Usuarios_activos as ( 
 select distinct date_trunc('MONTH', date(dt)) as mes,act_acct_cd  
 from "db-analytics-prod"."fixed_cwp"
 where  
@@ -8,7 +7,6 @@ date(dt) >= date('2022-01-01') -- Filtro de año 2022
 and act_cust_typ_nm = 'Residencial'-- Filtro para servicio solo residencial
 and (fi_outst_age is null or fi_outst_age <90 ) ---  Clientes con menos de 90 dias de mora considerados activos
 )
-
 ,dias_desactivacion as(
 select distinct
 a.act_acct_cd,
