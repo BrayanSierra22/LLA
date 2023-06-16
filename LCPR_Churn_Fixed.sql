@@ -555,7 +555,7 @@ SELECT  fix_s_dim_month
                 WHEN fix_s_fla_churn_type = '2. Fixed Involuntary Churner' THEN 'Involuntary'
                 WHEN fix_s_fla_ChurnFlag = '2. Fixed NonChurner' AND fix_b_fla_active
                 = 1 AND fix_e_fla_active = 0 AND churn0p = 'Churner0P' THEN '0P Churner'
-                    END AS fix_s_fla_ChurnSubType
+                    END AS fix_s_fla_final_churn
         ,fix_s_fla_Rejoiner
 FROM prepaid_churner_flag
 )
