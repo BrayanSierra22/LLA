@@ -113,7 +113,7 @@ SELECT  subsrptn_id AS account
         WHEN subsrptn_id in (SELECT subsrptn_id FROM missing_accounts) and DATE_DIFF('day',date(activation_dt),(date(dt_2) + interval '1' month - interval '1' day - interval '1' month)) >  360 THEN 'Late-Tenure'
         ELSE NULL END AS mob_b_fla_Tenure
         ,null AS mob_b_mes_MRC
-        ,1 AS mob_b_mes_numRGUS
+        ,1 AS mob_b_mes_rgus
 FROM (
     (SELECT * FROM cust_mstr_adj WHERE date(dt_2) = (SELECT input_month FROM parameters) - interval '1' month
     --> Flags utilizadas para clasificar a los usuarios residenciales. Input de Juan C. Vega
@@ -141,7 +141,7 @@ SELECT  subsrptn_id as account
                 WHEN DATE_DIFF('day',date(activation_dt),(date(dt_2) + interval '1' month - interval '1' day)) >  360 THEN 'Late-Tenure'
                     ELSE NULL END AS mob_e_fla_Tenure
         ,null AS mob_e_mes_MRC
-        ,1 AS mob_e_mes_numRGUS
+        ,1 AS mob_e_mes_rgus
 FROM cust_mstr_adj
 WHERE date(dt_2) = (SELECT input_month FROM parameters)
         --> Flags utilizadas para clasificar a los usuarios residenciales. Input de Juan C. Vega
@@ -170,13 +170,13 @@ SELECT  (SELECT input_month FROM parameters) AS mob_s_dim_month
         ,mob_b_dim_max_start
         ,mob_b_fla_Tenure
         ,mob_b_mes_MRC
-        ,mob_b_mes_numRGUS
+        ,mob_b_mes_rgus
         ,mob_e_dim_date
         ,mob_e_mes_tenure_days
         ,mob_e_dim_max_start
         ,mob_e_fla_Tenure
         ,mob_e_mes_MRC
-        ,mob_e_mes_numRGUS
+        ,mob_e_mes_rgus
 FROM BOM_active_base A FULL OUTER JOIN EOM_active_base B
     ON A.account = B.account
 )
@@ -219,13 +219,13 @@ SELECT  A.mob_s_dim_month
         ,A.mob_b_dim_max_start
         ,A.mob_b_fla_Tenure
         ,IF(A.mob_s_att_ParentAccount = B.mob_s_att_ParentAccount,B.BOM_MRC_per_subs,A.mob_b_mes_MRC) AS mob_b_mes_MRC
-        ,A.mob_b_mes_numRGUS
+        ,A.mob_b_mes_rgus
         ,A.mob_e_dim_date
         ,A.mob_e_mes_tenure_days
         ,A.mob_e_dim_max_start
         ,A.mob_e_fla_Tenure
         ,IF(A.mob_s_att_ParentAccount = B.mob_s_att_ParentAccount,B.EOM_MRC_per_subs,A.mob_e_mes_MRC) AS mob_e_mes_MRC
-        ,A.mob_e_mes_numRGUS
+        ,A.mob_e_mes_rgus
 FROM customer_status A LEFT JOIN fixed_mrc B 
 ON A.mob_s_att_ParentAccount = B.mob_s_att_ParentAccount
 )
@@ -251,16 +251,16 @@ WHERE
 
 ,main_movement_flag AS(
 SELECT  *
-        ,CASE   WHEN (mob_e_mes_numRGUS - mob_b_mes_numRGUS) = 0 or mob_s_att_account in (SELECT fake_churn_id FROM fake_churns) THEN '1.SameRGUs' 
-                WHEN (mob_e_mes_numRGUS - mob_b_mes_numRGUS) > 0 THEN '2.Upsell'
-                WHEN (mob_e_mes_numRGUS - mob_b_mes_numRGUS) < 0 THEN '3.Downsell'
-                -- WHEN (mob_b_mes_numRGUS IS NULL AND mob_e_mes_numRGUS > 0 AND DATE_TRUNC('MONTH',mob_e_dim_max_start) =  mob_s_dim_month) THEN '4.New Customer'
-                -- WHEN (mob_b_mes_numRGUS IS NULL AND mob_e_mes_numRGUS > 0 AND DATE_TRUNC('MONTH',mob_e_dim_max_start) <> mob_s_dim_month) THEN '5.Come Back to Life'
-                WHEN (mob_b_mes_numRGUS IS NULL AND mob_e_mes_numRGUS > 0 AND newcust_candidate_flag is not null) and mob_s_att_account not in (SELECT fake_churn_id FROM fake_churns) THEN '4.New Customer'
-                WHEN (mob_b_mes_numRGUS IS NULL AND mob_e_mes_numRGUS > 0 AND newcust_candidate_flag is null) and mob_s_att_account not in (SELECT fake_churn_id FROM fake_churns) THEN '5.Come Back to Life'
-                WHEN (mob_b_mes_numRGUS > 0 AND mob_e_mes_numRGUS IS NULL) THEN '6.Null last day'
-                WHEN (mob_b_mes_numRGUS IS NULL AND mob_e_mes_numRGUS IS NULL) THEN '7.Always null'
-                    END AS mob_s_fla_MainMovement
+        ,CASE   WHEN (mob_e_mes_rgus - mob_b_mes_rgus) = 0 or mob_s_att_account in (SELECT fake_churn_id FROM fake_churns) THEN '1.SameRGUs' 
+                WHEN (mob_e_mes_rgus - mob_b_mes_rgus) > 0 THEN '2.Upsell'
+                WHEN (mob_e_mes_rgus - mob_b_mes_rgus) < 0 THEN '3.Downsell'
+                -- WHEN (mob_b_mes_rgus IS NULL AND mob_e_mes_rgus > 0 AND DATE_TRUNC('MONTH',mob_e_dim_max_start) =  mob_s_dim_month) THEN '4.New Customer'
+                -- WHEN (mob_b_mes_rgus IS NULL AND mob_e_mes_rgus > 0 AND DATE_TRUNC('MONTH',mob_e_dim_max_start) <> mob_s_dim_month) THEN '5.Come Back to Life'
+                WHEN (mob_b_mes_rgus IS NULL AND mob_e_mes_rgus > 0 AND newcust_candidate_flag is not null) and mob_s_att_account not in (SELECT fake_churn_id FROM fake_churns) THEN '4.New Customer'
+                WHEN (mob_b_mes_rgus IS NULL AND mob_e_mes_rgus > 0 AND newcust_candidate_flag is null) and mob_s_att_account not in (SELECT fake_churn_id FROM fake_churns) THEN '5.Come Back to Life'
+                WHEN (mob_b_mes_rgus > 0 AND mob_e_mes_rgus IS NULL) THEN '6.Null last day'
+                WHEN (mob_b_mes_rgus IS NULL AND mob_e_mes_rgus IS NULL) THEN '7.Always null'
+                    END AS mob_s_fla_movement
 FROM customer_status_2 A
 LEFT JOIN newcust_candidates B
     ON A.mob_s_att_account = B.newcust_candidate_flag
@@ -269,9 +269,9 @@ LEFT JOIN newcust_candidates B
 ,spin_movement_flag AS(
 SELECT  *
         ,ROUND((IF(mob_e_mes_MRC IS NULL,0,mob_e_mes_MRC) - IF(mob_b_mes_MRC IS NULL,0,mob_b_mes_MRC)),0) AS mob_s_mes_mrc_diff
-        ,CASE   WHEN mob_s_fla_MainMovement = '1.SameRGUs' AND (IF(mob_e_mes_MRC IS NULL,0,mob_e_mes_MRC) - IF(mob_b_mes_MRC IS NULL,0,mob_b_mes_MRC)) = 0 THEN '1.Same'
-                WHEN mob_s_fla_MainMovement = '1.SameRGUs' AND (IF(mob_e_mes_MRC IS NULL,0,mob_e_mes_MRC) - IF(mob_b_mes_MRC IS NULL,0,mob_b_mes_MRC)) > 0 THEN '2.Upspin'
-                WHEN mob_s_fla_MainMovement = '1.SameRGUs' AND (IF(mob_e_mes_MRC IS NULL,0,mob_e_mes_MRC) - IF(mob_b_mes_MRC IS NULL,0,mob_b_mes_MRC)) < 0 THEN '3.Downspin'
+        ,CASE   WHEN mob_s_fla_movement = '1.SameRGUs' AND (IF(mob_e_mes_MRC IS NULL,0,mob_e_mes_MRC) - IF(mob_b_mes_MRC IS NULL,0,mob_b_mes_MRC)) = 0 THEN '1.Same'
+                WHEN mob_s_fla_movement = '1.SameRGUs' AND (IF(mob_e_mes_MRC IS NULL,0,mob_e_mes_MRC) - IF(mob_b_mes_MRC IS NULL,0,mob_b_mes_MRC)) > 0 THEN '2.Upspin'
+                WHEN mob_s_fla_movement = '1.SameRGUs' AND (IF(mob_e_mes_MRC IS NULL,0,mob_e_mes_MRC) - IF(mob_b_mes_MRC IS NULL,0,mob_b_mes_MRC)) < 0 THEN '3.Downspin'
                     ELSE '4.NoSpin' END AS mob_s_fla_SpinMovement
 FROM main_movement_flag 
 )
@@ -336,7 +336,7 @@ FROM    (SELECT *
 SELECT  A.*
         ,CASE   WHEN B.churn_account IS NOT NULL THEN '1. Mobile Churner'
                 WHEN B.churn_account IS NULL THEN '2. Mobile NonChurner'
-                    END AS mob_s_fla_ChurnFlag
+                    END AS mob_s_fla_churn
         ,CASE   WHEN B.churn_type = 'Involuntary' THEN '2. Mobile Involuntary Churner'
                 WHEN B.churn_type = 'Voluntary' THEN '1. Mobile Voluntary Churner'
                     ELSE NULL END AS mob_s_dim_churn_type
@@ -378,26 +378,26 @@ SELECT  mob_s_dim_month
         ,mob_s_att_account
         ,mob_s_att_ParentAccount
         ,mob_s_att_MobileType
-        ,IF(mob_s_att_account NOT IN (SELECT DISTINCT account FROM cleaning) AND mob_s_fla_MainMovement = '6.Null last day',0,mob_b_fla_active) AS mob_b_fla_active
-        ,IF(mob_s_fla_ChurnFlag = '1. Mobile Churner',0,mob_e_fla_active) AS mob_e_fla_active
+        ,IF(mob_s_att_account NOT IN (SELECT DISTINCT account FROM cleaning) AND mob_s_fla_movement = '6.Null last day',0,mob_b_fla_active) AS mob_b_fla_active
+        ,IF(mob_s_fla_churn = '1. Mobile Churner',0,mob_e_fla_active) AS mob_e_fla_active
         ,mob_b_dim_date
         ,mob_b_mes_tenure_days
         ,mob_b_dim_max_start
         ,mob_b_fla_Tenure
         ,IF(CAST(mob_b_mes_MRC AS VARCHAR) = 'NaN',NULL,mob_b_mes_MRC) AS mob_b_mes_MRC
-        ,mob_b_mes_numRGUS
+        ,mob_b_mes_rgus
         ,mob_e_dim_date
         ,mob_e_mes_tenure_days
         ,mob_e_dim_max_start
         ,mob_e_fla_Tenure
         ,IF (mob_e_mes_MRC IS NULL, null,mob_e_mes_MRC) AS mob_e_mes_MRC
-        ,IF(mob_s_fla_ChurnFlag = '1. Mobile Churner',0,mob_e_mes_numRGUS) AS mob_e_mes_numRGUS
-        ,IF(mob_s_fla_ChurnFlag = '1. Mobile Churner','6.Null last day',mob_s_fla_MainMovement) AS mob_s_fla_MainMovement
+        ,IF(mob_s_fla_churn = '1. Mobile Churner',0,mob_e_mes_rgus) AS mob_e_mes_rgus
+        ,IF(mob_s_fla_churn = '1. Mobile Churner','6.Null last day',mob_s_fla_movement) AS mob_s_fla_movement
         ,mob_s_mes_mrc_diff
-        ,IF(mob_s_fla_ChurnFlag = '1. Mobile Churner','4.NoSpin',mob_s_fla_SpinMovement) AS mob_s_fla_SpinMovement
-        ,IF(mob_s_fla_MainMovement = '6.Null last day' AND mob_s_fla_ChurnFlag = '2. Mobile NonChurner','1. Mobile Churner',mob_s_fla_ChurnFlag) AS mob_s_fla_ChurnFlag
-        ,IF(mob_s_fla_MainMovement = '6.Null last day' AND mob_s_dim_churn_type IS NULL,'1. Mobile Voluntary Churner',mob_s_dim_churn_type) AS mob_s_dim_churn_type
-        ,IF(mob_b_fla_active = 0 AND mob_e_fla_active = 1 AND mob_s_att_account IN (SELECT DISTINCT rejoiner_account FROM rejoiner_candidates),1,0) AS mob_s_fla_Rejoiner
+        ,IF(mob_s_fla_churn = '1. Mobile Churner','4.NoSpin',mob_s_fla_SpinMovement) AS mob_s_fla_SpinMovement
+        ,IF(mob_s_fla_movement = '6.Null last day' AND mob_s_fla_churn = '2. Mobile NonChurner','1. Mobile Churner',mob_s_fla_churn) AS mob_s_fla_churn
+        ,IF(mob_s_fla_movement = '6.Null last day' AND mob_s_dim_churn_type IS NULL,'1. Mobile Voluntary Churner',mob_s_dim_churn_type) AS mob_s_dim_churn_type
+        ,IF(mob_b_fla_active = 0 AND mob_e_fla_active = 1 AND mob_s_att_account IN (SELECT DISTINCT rejoiner_account FROM rejoiner_candidates),1,0) AS mob_s_fla_rejoiner_month
 FROM mobile_table_churn_flag
 )
 
@@ -412,9 +412,9 @@ WHERE
 --     mob_s_dim_month, 
 --     mob_b_fla_active, 
 --     mob_e_fla_active, 
---     mob_s_fla_MainMovement, 
+--     mob_s_fla_movement, 
 --     mob_s_fla_SpinMovement, 
---     mob_s_fla_ChurnFlag, 
+--     mob_s_fla_churn, 
 --     mob_s_dim_churn_type, 
 --     count(distinct mob_s_att_account) as accounts, 
 --     count(distinct case when mob_b_fla_active = 1 then mob_s_att_account else null end) as EOM_RGUs, 
