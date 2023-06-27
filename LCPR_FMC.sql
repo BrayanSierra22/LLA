@@ -150,25 +150,25 @@ SELECT  IF(fix_s_dim_month IS NOT NULL,fix_s_dim_month,mob_s_dim_month) AS fmc_s
                 WHEN (mob_b_fla_tenure IS NOT NULL AND fix_b_fla_tenure IS NULL) THEN mob_b_fla_tenure
                 WHEN (fix_b_fla_tenure <> mob_b_fla_tenure AND (fix_b_fla_tenure = 'Early-Tenure' or mob_b_fla_tenure = 'Early-Tenure' )) THEN 'Early-Tenure'
                 WHEN (fix_b_fla_tenure <> mob_b_fla_tenure AND (fix_b_fla_tenure = 'Mid-Tenure' or mob_b_fla_tenure = 'Mid-Tenure' )) THEN 'Mid-Tenure'
-                    END AS fmc_b_fla_tenure
+                    END AS fmc_b_fla_final_tenure
         ,CASE   WHEN (fix_e_fla_tenure IS NOT NULL AND mob_e_fla_tenure IS NULL) THEN fix_e_fla_tenure
                 WHEN (fix_e_fla_tenure = mob_e_fla_tenure) THEN fix_e_fla_tenure
                 WHEN (mob_e_fla_tenure IS NOT NULL AND fix_e_fla_tenure IS NULL) THEN mob_e_fla_tenure
                 WHEN (fix_e_fla_tenure <> mob_e_fla_tenure AND (fix_e_fla_tenure = 'Early-Tenure'  or mob_e_fla_tenure = 'Early-Tenure' )) THEN 'Early-Tenure'
                 WHEN (fix_e_fla_tenure <> mob_e_fla_tenure AND (fix_e_fla_tenure = 'Mid-Tenure'  or mob_e_fla_tenure = 'Mid-Tenure' )) THEN 'Mid-Tenure'
-                    END AS fmc_e_fla_tenure
-        ,IF(fix_b_mes_num_rgus IS NULL,0,fix_b_mes_num_rgus) + IF(mob_b_mes_numRGUS IS NULL,0,mob_b_mes_numRGUS) AS fmc_b_mes_numRGUS
-        ,IF(fix_e_mes_num_rgus IS NULL,0,fix_e_mes_num_rgus) + IF(mob_e_mes_numRGUS IS NULL,0,mob_e_mes_numRGUS) AS fmc_e_mes_numRGUS
-        ,IF(fix_b_mes_mrc IS NULL,0,fix_b_mes_mrc) + IF(mob_b_mes_mrc IS NULL,0,mob_b_mes_mrc) AS fmc_b_mes_mrc
-        ,IF(fix_e_mes_mrc IS NULL,0,fix_e_mes_mrc) + IF(mob_e_mes_mrc IS NULL,0,mob_e_mes_mrc) AS fmc_e_mes_mrc
+                    END AS fmc_e_fla_final_tenure
+        ,IF(fix_b_mes_num_rgus IS NULL,0,fix_b_mes_num_rgus) + IF(mob_b_mes_numRGUS IS NULL,0,mob_b_mes_numRGUS) AS fmc_b_mes_total_rgus
+        ,IF(fix_e_mes_num_rgus IS NULL,0,fix_e_mes_num_rgus) + IF(mob_e_mes_numRGUS IS NULL,0,mob_e_mes_numRGUS) AS fmc_e_mes_total_rgus
+        ,IF(fix_b_mes_mrc IS NULL,0,fix_b_mes_mrc) + IF(mob_b_mes_mrc IS NULL,0,mob_b_mes_mrc) AS fmc_b_mes_total_mrc
+        ,IF(fix_e_mes_mrc IS NULL,0,fix_e_mes_mrc) + IF(mob_e_mes_mrc IS NULL,0,mob_e_mes_mrc) AS fmc_e_mes_total_mrc
         ,CASE   WHEN fix_b_fla_active = 1 AND IF(mob_b_att_active IS NULL,0,mob_b_att_active) = 0 THEN IF((fix_s_att_contact_phone1 IN (SELECT DISTINCT prepaid_account FROM BOM_prepaid_base) OR fix_s_att_contact_phone2  IN (SELECT DISTINCT prepaid_account FROM BOM_prepaid_base)),IF(fix_b_att_BillCode IN (SELECT DISTINCT bill_code FROM "lcpr.stage.dev"."lcpr_fix_fmc_bill_codes"),'Prepaid Real FMC','Prepaid Near FMC'),'Fixed Only')
                 WHEN IF(fix_b_fla_active IS NULL,0,fix_b_fla_active) = 0 AND mob_b_att_active = 1 THEN 'Mobile Only'
                 WHEN fix_b_fla_active + mob_b_att_active = 2 THEN IF((fix_s_att_contact_phone1 IN (SELECT DISTINCT prepaid_account FROM BOM_prepaid_base) OR fix_s_att_contact_phone2  IN (SELECT DISTINCT prepaid_account FROM BOM_prepaid_base)),IF(fix_b_att_BillCode IN (SELECT DISTINCT bill_code FROM "lcpr.stage.dev"."lcpr_fix_fmc_bill_codes"),'Real FMC','Near FMC'),IF(fix_b_att_BillCode IN (SELECT DISTINCT bill_code FROM "lcpr.stage.dev"."lcpr_fix_fmc_bill_codes"),'Postpaid Real FMC','Postpaid Near FMC'))
-                    ELSE NULL END AS fmc_b_fla_fmc
+                    ELSE NULL END AS fmc_b_fla_fmc_type
         ,CASE   WHEN fix_e_fla_active = 1 AND IF(mob_e_att_active IS NULL,0,mob_e_att_active) = 0 THEN IF((fix_s_att_contact_phone1 IN (SELECT DISTINCT prepaid_account FROM EOM_prepaid_base) OR fix_s_att_contact_phone2  IN (SELECT DISTINCT prepaid_account FROM EOM_prepaid_base)),IF(fix_e_att_BillCode IN (SELECT DISTINCT bill_code FROM "lcpr.stage.dev"."lcpr_fix_fmc_bill_codes"),'Prepaid Real FMC','Prepaid Near FMC'),'Fixed Only')
                 WHEN IF(fix_e_fla_active IS NULL,0,fix_e_fla_active) = 0 AND mob_e_att_active = 1 THEN 'Mobile Only'
                 WHEN fix_e_fla_active + mob_e_att_active = 2 THEN IF((fix_s_att_contact_phone1 IN (SELECT DISTINCT prepaid_account FROM EOM_prepaid_base) OR fix_s_att_contact_phone2  IN (SELECT DISTINCT prepaid_account FROM EOM_prepaid_base)),IF(fix_e_att_BillCode IN (SELECT DISTINCT bill_code FROM "lcpr.stage.dev"."lcpr_fix_fmc_bill_codes"),'Real FMC','Near FMC'),IF(fix_e_att_BillCode IN (SELECT DISTINCT bill_code FROM "lcpr.stage.dev"."lcpr_fix_fmc_bill_codes"),'Postpaid Real FMC','Postpaid Near FMC'))
-                    ELSE NULL END AS fmc_e_fla_fmc
+                    ELSE NULL END AS fmc_e_fla_fmc_type
 FROM    (
         SELECT A.*, B.mobile_account
         FROM fixed_table A LEFT JOIN (SELECT * FROM convergency WHERE row_fix = 1 AND row_mob <= 2) B
@@ -180,10 +180,10 @@ FROM    (
 
 ,FMC_base_adj AS (
 SELECT  *
-        ,IF(fmc_b_fla_fmc = 'Fixed Only',CONCAT(fix_b_dim_mix_code_adj,' Fixed'),IF(fmc_b_fla_fmc = 'Mobile Only','P1 Mobile',CONCAT(CAST((CAST(SUBSTR(fix_b_dim_mix_code_adj,1,1) AS int) + 1) AS VARCHAR),'P ',fmc_b_fla_fmc))) AS fmc_b_fla_FMCsegment
-        ,IF(fmc_e_fla_fmc = 'Fixed Only',CONCAT(fix_e_fla_MixCodeAdj,' Fixed'),IF(fmc_e_fla_fmc = 'Mobile Only','P1 Mobile',CONCAT(CAST((CAST(SUBSTR(fix_e_fla_MixCodeAdj,1,1) AS int) + 1) AS VARCHAR),'P ',fmc_e_fla_fmc))) AS fmc_e_fla_FMCsegment
-        ,IF(fmc_b_fla_fmc = 'Mobile Only','WIRELESS',fix_b_fla_tech_type) AS fmc_b_fla_tech
-        ,IF(fmc_e_fla_fmc = 'Mobile Only','WIRELESS',fix_e_fla_tech_type) AS fmc_e_fla_tech
+        ,IF(fmc_b_fla_fmc_type = 'Fixed Only',CONCAT(fix_b_dim_mix_code_adj,' Fixed'),IF(fmc_b_fla_fmc_type = 'Mobile Only','P1 Mobile',CONCAT(CAST((CAST(SUBSTR(fix_b_dim_mix_code_adj,1,1) AS int) + 1) AS VARCHAR),'P ',fmc_b_fla_fmc_type))) AS fmc_b_fla_fmc_typesegment
+        ,IF(fmc_e_fla_fmc_type = 'Fixed Only',CONCAT(fix_e_fla_MixCodeAdj,' Fixed'),IF(fmc_e_fla_fmc_type = 'Mobile Only','P1 Mobile',CONCAT(CAST((CAST(SUBSTR(fix_e_fla_MixCodeAdj,1,1) AS int) + 1) AS VARCHAR),'P ',fmc_e_fla_fmc_type))) AS fmc_e_fla_fmc_typesegment
+        ,IF(fmc_b_fla_fmc_type = 'Mobile Only','WIRELESS',fix_b_fla_tech_type) AS fmc_b_fla_final_tech
+        ,IF(fmc_e_fla_fmc_type = 'Mobile Only','WIRELESS',fix_e_fla_tech_type) AS fmc_e_fla_final_tech
         ,CASE   WHEN fix_s_fla_Rejoiner = 1 AND mob_s_fla_Rejoiner = 1 THEN '1. Full Rejoiner'
                 WHEN fix_s_fla_Rejoiner = 1 AND (mob_s_fla_Rejoiner = 0 OR mob_s_fla_Rejoiner IS NULL) THEN '2. Fixed Rejoiner'
                 WHEN mob_s_fla_Rejoiner = 1 AND (fix_s_fla_Rejoiner = 0 OR fix_s_fla_Rejoiner IS NULL) THEN '3. Mobile Rejoiner'
@@ -192,7 +192,7 @@ SELECT  *
                 WHEN (fix_s_fla_ChurnFlag = '1. Fixed Churner' AND fix_s_fla_churn_type <> '3. Fixed Transfer' AND (mob_s_fla_ChurnFlag =  '2. Mobile NonChurner' OR mob_s_fla_ChurnFlag IS NULL) ) THEN 'Fixed Churner'
                 WHEN (fix_s_fla_ChurnFlag = '1. Fixed Churner' AND fix_s_fla_churn_type = '3. Fixed Transfer' AND mob_s_fla_ChurnFlag =  '1. Mobile Churner') THEN 'Mobile Churner'
                 WHEN ((fix_s_fla_ChurnFlag = '2. Fixed NonChurner' OR fix_s_fla_ChurnFlag IS NULL) AND mob_s_fla_ChurnFlag =  '1. Mobile Churner') THEN 'Mobile Churner'
-                    ELSE 'Non Churner' END AS fmc_s_fla_ChurnFlag
+                    ELSE 'Non Churner' END AS fmc_s_fla_final_churn
         ,CASE   WHEN (fix_s_fla_churn_type = '1. Fixed Voluntary Churner' AND mob_s_fla_ChurnType = '1. Mobile Voluntary Churner')
                     OR (fix_s_fla_churn_type = '1. Fixed Voluntary Churner' AND mob_s_fla_ChurnType IS NULL) 
                     OR (fix_s_fla_churn_type IS NULL AND mob_s_fla_ChurnType = '1. Mobile Voluntary Churner')
@@ -208,7 +208,7 @@ SELECT  *
                         THEN 'Mixed Churner'
                 WHEN fix_s_fla_churn_type = '3. Fixed 0P Churner' AND mob_s_fla_ChurnType IS NULL THEN '0P Churner'
                 WHEN fix_s_fla_churn_type = '3. Fixed Transfer' AND mob_s_fla_ChurnType IS NULL THEN 'Fixed Transfer'
-                        ELSE 'Non Churner' END AS fmc_s_fla_ChurnType
+                        ELSE 'Non Churner' END AS fmc_s_fla_final_churn_type
 FROM FMC_base
 )
 
@@ -287,44 +287,44 @@ SELECT  fmc_s_dim_month
         ,mob_s_fla_churntype
         ,mob_s_fla_Rejoiner
         ,mob_s_att_duplicates
-        ,fmc_b_fla_tenure
-        ,fmc_e_fla_tenure
-        ,fmc_b_mes_numrgus
-        ,fmc_e_mes_numrgus
-        ,fmc_b_mes_mrc
-        ,fmc_e_mes_mrc
-        ,fmc_b_fla_fmc
-        ,fmc_e_fla_fmc
-        ,fmc_b_fla_FMCsegment
-        ,fmc_e_fla_FMCsegment
-        ,fmc_b_fla_tech
-        ,fmc_e_fla_tech
-        ,CASE   WHEN (fmc_s_fla_Rejoiner = '2. Fixed Rejoiner' OR fmc_s_fla_Rejoiner = '3. Mobile Rejoiner') AND fmc_e_fla_FMCsegment IN ('2P FMC','3P FMC','4P FMC') THEN '1. FMC Rejoiner'
+        ,fmc_b_fla_final_tenure
+        ,fmc_e_fla_final_tenure
+        ,fmc_b_mes_total_rgus
+        ,fmc_e_mes_total_rgus
+        ,fmc_b_mes_total_mrc
+        ,fmc_e_mes_total_mrc
+        ,fmc_b_fla_fmc_type
+        ,fmc_e_fla_fmc_type
+        ,fmc_b_fla_fmc_typesegment
+        ,fmc_e_fla_fmc_typesegment
+        ,fmc_b_fla_final_tech
+        ,fmc_e_fla_final_tech
+        ,CASE   WHEN (fmc_s_fla_Rejoiner = '2. Fixed Rejoiner' OR fmc_s_fla_Rejoiner = '3. Mobile Rejoiner') AND fmc_e_fla_fmc_typesegment IN ('2P FMC','3P FMC','4P FMC') THEN '1. FMC Rejoiner'
                     ELSE fmc_s_fla_Rejoiner END AS fmc_s_fla_Rejoiner
-        ,fmc_s_fla_ChurnFlag
-        ,fmc_s_fla_ChurnType
-        ,CASE   WHEN (fmc_s_fla_ChurnFlag = 'Churner') OR (fmc_s_fla_ChurnFlag = 'Fixed Churner' /*AND fmc_b_fla_FMCsegment = 'P1 Fixed'*/ and fmc_e_fla_FMCsegment is null and fmc_s_fla_ChurnType <> 'Fixed Transfer') OR (fmc_s_fla_ChurnFlag = 'Mobile Churner' and fmc_b_fla_FMCsegment = 'P1 Mobile' and fmc_e_fla_FMCsegment is null and fmc_s_fla_ChurnType <> 'Fixed Transfer') THEN 'Total Churner'
-                WHEN fmc_s_fla_ChurnFlag = 'Non Churner' THEN NULL
-                    ELSE 'Partial Churner' END AS fmc_s_fla_PartialTotalChurn
+        ,fmc_s_fla_final_churn
+        ,fmc_s_fla_final_churn_type
+        ,CASE   WHEN (fmc_s_fla_final_churn = 'Churner') OR (fmc_s_fla_final_churn = 'Fixed Churner' /*AND fmc_b_fla_fmc_typesegment = 'P1 Fixed'*/ and fmc_e_fla_fmc_typesegment is null and fmc_s_fla_final_churn_type <> 'Fixed Transfer') OR (fmc_s_fla_final_churn = 'Mobile Churner' and fmc_b_fla_fmc_typesegment = 'P1 Mobile' and fmc_e_fla_fmc_typesegment is null and fmc_s_fla_final_churn_type <> 'Fixed Transfer') THEN 'Total Churner'
+                WHEN fmc_s_fla_final_churn = 'Non Churner' THEN NULL
+                    ELSE 'Partial Churner' END AS fmc_s_fla_partial_churn
         ,CASE   WHEN (fmc_b_att_active = 0 AND fmc_e_att_active = 1) AND ((fix_s_fla_main_movement IN ('4.New Customer','8.Rejoiner-GrossAdd Gap') AND mob_s_fla_MainMovement = '4.New Customer') OR (fix_s_fla_main_movement IN ('4.New Customer','8.Rejoiner-GrossAdd Gap') AND mob_s_fla_MainMovement IS NULL) OR (fix_s_fla_main_movement IS NULL AND mob_s_fla_MainMovement = '4.New Customer')) THEN 'Gross Adds'
                 WHEN (fix_b_fla_active = 0 and fix_e_fla_active = 1) AND fix_s_fla_main_movement IS NULL AND fix_e_dim_max_start IS NULL THEN 'GrossAdds-Fixed Customer Gap'
-                WHEN (fmc_b_att_active = 0 and fmc_e_att_active = 1) AND (fix_s_fla_main_movement = '5.Come Back to Life' OR mob_s_fla_MainMovement = '5.Come Back to Life') AND fmc_s_fla_ChurnFlag <> 'Non Churner' THEN 'ComeBackToLife-Fixed Customer Gap'
-                WHEN fmc_b_att_active = 0 AND fmc_e_att_active = 1 AND fmc_s_fla_Rejoiner = '1. Full Rejoiner' AND fmc_e_fla_FMCsegment IN ('2P FMC','3P FMC','4P FMC') THEN '5.1. FMC Rejoiner'
-                WHEN fmc_b_att_active = 0 AND fmc_e_att_active = 1 AND fmc_s_fla_Rejoiner = '2. Fixed Rejoiner' AND fmc_e_fla_FMCsegment NOT IN ('2P FMC','3P FMC','4P FMC') THEN '5.2. Fixed Rejoiner'
-                WHEN fmc_b_att_active = 0 AND fmc_e_att_active = 1 AND fmc_s_fla_Rejoiner = '3. Mobile Rejoiner' AND fmc_e_fla_FMCsegment NOT IN ('2P FMC','3P FMC','4P FMC') THEN '5.3. Mobile Rejoiner'
+                WHEN (fmc_b_att_active = 0 and fmc_e_att_active = 1) AND (fix_s_fla_main_movement = '5.Come Back to Life' OR mob_s_fla_MainMovement = '5.Come Back to Life') AND fmc_s_fla_final_churn <> 'Non Churner' THEN 'ComeBackToLife-Fixed Customer Gap'
+                WHEN fmc_b_att_active = 0 AND fmc_e_att_active = 1 AND fmc_s_fla_Rejoiner = '1. Full Rejoiner' AND fmc_e_fla_fmc_typesegment IN ('2P FMC','3P FMC','4P FMC') THEN '5.1. FMC Rejoiner'
+                WHEN fmc_b_att_active = 0 AND fmc_e_att_active = 1 AND fmc_s_fla_Rejoiner = '2. Fixed Rejoiner' AND fmc_e_fla_fmc_typesegment NOT IN ('2P FMC','3P FMC','4P FMC') THEN '5.2. Fixed Rejoiner'
+                WHEN fmc_b_att_active = 0 AND fmc_e_att_active = 1 AND fmc_s_fla_Rejoiner = '3. Mobile Rejoiner' AND fmc_e_fla_fmc_typesegment NOT IN ('2P FMC','3P FMC','4P FMC') THEN '5.3. Mobile Rejoiner'
                 WHEN fmc_b_att_active = 1 AND fmc_e_att_active = 1 AND fmc_s_fla_Rejoiner IS NOT NULL THEN '5.4 Near Rejoiner'
                 WHEN (fmc_b_att_active = 0 and fmc_e_att_active = 1) AND (fix_s_fla_main_movement = '5.Come Back to Life' OR mob_s_fla_MainMovement = '5.Come Back to Life') AND fmc_s_fla_Rejoiner IS NULL THEN 'Gross Adds'
-                WHEN (fmc_b_att_active = 0 and fmc_e_att_active = 1) AND fmc_s_fla_ChurnType = 'Non Churner' AND fix_s_fla_main_movement = '7.Transfer Adds' THEN 'Fixed Transfer Adds'
-                WHEN fmc_s_fla_ChurnType = 'Fixed Transfer' THEN 'Fixed Transfer Churn'
-                WHEN (fmc_b_att_active = 1 and fmc_e_att_active = 1) AND (fmc_b_mes_numRGUS < fmc_e_mes_numRGUS) THEN 'Upsell'
-                WHEN (fmc_b_att_active = 1 and fmc_e_att_active = 1) AND (fmc_b_mes_numRGUS > fmc_e_mes_numRGUS) THEN 'Downsell'
-                WHEN (fmc_b_att_active = 1 and fmc_e_att_active = 1) AND (fmc_b_mes_numRGUS = fmc_e_mes_numRGUS) AND (fmc_b_mes_mrc = fmc_e_mes_mrc) THEN 'Maintain'
-                WHEN (fmc_b_att_active = 1 and fmc_e_att_active = 1) AND (fmc_b_mes_numRGUS = fmc_e_mes_numRGUS) AND (fmc_b_mes_mrc < fmc_e_mes_mrc) THEN 'Upspin'
-                WHEN (fmc_b_att_active = 1 and fmc_e_att_active = 1) AND (fmc_b_mes_numRGUS = fmc_e_mes_numRGUS) AND (fmc_b_mes_mrc > fmc_e_mes_mrc) THEN 'Downspin'
-                WHEN (fmc_b_att_active = 1 and fmc_e_att_active = 0) AND (fmc_s_fla_ChurnFlag <> 'Non Churner' AND fmc_s_fla_ChurnType = 'Voluntary Churner') THEN 'Voluntary Churner'
-                WHEN (fmc_b_att_active = 1 and fmc_e_att_active = 0) AND (fmc_s_fla_ChurnFlag <> 'Non Churner' AND fmc_s_fla_ChurnType = 'Involuntary Churner') THEN 'Involuntary Churner'
-                WHEN (fmc_b_att_active = 1 and fmc_e_att_active = 0) AND (fmc_s_fla_ChurnFlag <> 'Non Churner' AND fmc_s_fla_ChurnType = 'Mixed Churner') THEN 'Mixed Churner'
-                WHEN (fmc_b_att_active = 1 and fmc_e_att_active = 0) AND fix_s_fla_main_movement = '6.Null last day' AND fmc_s_fla_ChurnFlag = 'Non Churner' THEN 'Loss-Fixed Customer Gap'
+                WHEN (fmc_b_att_active = 0 and fmc_e_att_active = 1) AND fmc_s_fla_final_churn_type = 'Non Churner' AND fix_s_fla_main_movement = '7.Transfer Adds' THEN 'Fixed Transfer Adds'
+                WHEN fmc_s_fla_final_churn_type = 'Fixed Transfer' THEN 'Fixed Transfer Churn'
+                WHEN (fmc_b_att_active = 1 and fmc_e_att_active = 1) AND (fmc_b_mes_total_rgus < fmc_e_mes_total_rgus) THEN 'Upsell'
+                WHEN (fmc_b_att_active = 1 and fmc_e_att_active = 1) AND (fmc_b_mes_total_rgus > fmc_e_mes_total_rgus) THEN 'Downsell'
+                WHEN (fmc_b_att_active = 1 and fmc_e_att_active = 1) AND (fmc_b_mes_total_rgus = fmc_e_mes_total_rgus) AND (fmc_b_mes_total_mrc = fmc_e_mes_total_mrc) THEN 'Maintain'
+                WHEN (fmc_b_att_active = 1 and fmc_e_att_active = 1) AND (fmc_b_mes_total_rgus = fmc_e_mes_total_rgus) AND (fmc_b_mes_total_mrc < fmc_e_mes_total_mrc) THEN 'Upspin'
+                WHEN (fmc_b_att_active = 1 and fmc_e_att_active = 1) AND (fmc_b_mes_total_rgus = fmc_e_mes_total_rgus) AND (fmc_b_mes_total_mrc > fmc_e_mes_total_mrc) THEN 'Downspin'
+                WHEN (fmc_b_att_active = 1 and fmc_e_att_active = 0) AND (fmc_s_fla_final_churn <> 'Non Churner' AND fmc_s_fla_final_churn_type = 'Voluntary Churner') THEN 'Voluntary Churner'
+                WHEN (fmc_b_att_active = 1 and fmc_e_att_active = 0) AND (fmc_s_fla_final_churn <> 'Non Churner' AND fmc_s_fla_final_churn_type = 'Involuntary Churner') THEN 'Involuntary Churner'
+                WHEN (fmc_b_att_active = 1 and fmc_e_att_active = 0) AND (fmc_s_fla_final_churn <> 'Non Churner' AND fmc_s_fla_final_churn_type = 'Mixed Churner') THEN 'Mixed Churner'
+                WHEN (fmc_b_att_active = 1 and fmc_e_att_active = 0) AND fix_s_fla_main_movement = '6.Null last day' AND fmc_s_fla_final_churn = 'Non Churner' THEN 'Loss-Fixed Customer Gap'
                     ELSE NULL END AS fmc_s_fla_waterfall
 FROM FMC_base_adj
 )
