@@ -29,7 +29,7 @@ SELECT  date(dt) AS dt
         ,joint_customer
         ,welcome_offer
         ,bill_code
-FROM "lcpr.stage.prod"."insights_customer_services_rates_lcpr"
+FROM "db-stage-prod-lf"."insights_customer_services_rates_lcpr"
 WHERE play_type <> '0P'
     AND cust_typ_sbb = 'RES' 
     AND date(dt) BETWEEN ((SELECT input_month FROM parameters) + interval '1' MONTH - interval '1' DAY - interval '2' MONTH) AND  ((SELECT input_month FROM parameters) + interval '1' MONTH) 
@@ -37,14 +37,14 @@ WHERE play_type <> '0P'
 
 ,BOM_subsidized_customers AS (
 SELECT  sub_acct_no_sbb
-FROM "lcpr.stage.prod"."insights_customer_services_rates_lcpr"
+FROM "db-stage-prod-lf"."insights_customer_services_rates_lcpr"
 WHERE date(dt) = (SELECT input_month FROM parameters) - interval '1' MONTH
 AND acp = 'X'
 )
 
 ,EOM_subsidized_customers AS (
 SELECT  sub_acct_no_sbb
-FROM "lcpr.stage.prod"."insights_customer_services_rates_lcpr"
+FROM "db-stage-prod-lf"."insights_customer_services_rates_lcpr"
 WHERE date(dt) = (SELECT input_month FROM parameters)
 AND acp = 'X'
 )
@@ -219,7 +219,7 @@ SELECT  DATE_TRUNC('MONTH',DATE(completed_date)) AS month
         ,IF(lob_bb_count > 0,1,0) AS BB_Churn
         ,IF(lob_tv_count > 0,1,0) AS TV_Churn
         ,(IF(lob_vo_count > 0,1,0)+IF(lob_bb_count > 0,1,0)+IF(lob_tv_count > 0,1,0)) AS RGUs_Prel
-FROM "lcpr.stage.prod"."so_hdr_lcpr"
+FROM "db-stage-prod-lf."so_hdr_lcpr"
 WHERE order_type = 'V_DISCO'
     AND account_type = 'RES'
     AND order_status = 'COMPLETE'
@@ -472,7 +472,7 @@ FROM month_fixed_rejoiners A LEFT JOIN service_orders_flag B
 SELECT  DISTINCT DATE(date_trunc('MONTH',DATE(dt))) AS month
         ,date(dt) AS dt
         ,sub_acct_no_sbb
-FROM "lcpr.stage.prod"."insights_customer_services_rates_lcpr"
+FROM "db-stage-prod-lf"."insights_customer_services_rates_lcpr"
 WHERE play_type = '0P'
     AND cust_typ_sbb = 'RES' 
     AND date(dt) BETWEEN ((SELECT input_month FROM parameters) + interval '1' MONTH - interval '1' DAY - interval '2' MONTH) AND  ((SELECT input_month FROM parameters) + interval '1' MONTH) 
@@ -487,7 +487,7 @@ FROM invol_flag_SO A LEFT JOIN prepaid_churners B
 
 ,transfers AS (
 SELECT account_id
-FROM "lcpr.stage.prod"."so_hdr_lcpr"
+FROM "db-stage-prod-lf."so_hdr_lcpr"
 WHERE TRIM(order_type) = 'RELOCATION/TRAN'
     AND account_type = 'RES'
     AND order_status = 'COMPLETE'
